@@ -8,21 +8,30 @@ Vagrant.configure("2") do |config|
   config.vm.box_url = "http://boxes.monsieurbiz.com/debian-wheezy.box"
 
   # Port forwarding
-  config.vm.network :forwarded_port, guest: 80, host: 8080, auto_correct: true
   config.vm.network :forwarded_port, guest: 1080, host: 1080, auto_correct: true
+  config.vm.network :forwarded_port, guest: 9000, host: 9090, auto_correct: true
 
   # Network
   config.vm.network :private_network, ip: "10.0.0.2"
+  config.hostmanager.enabled            = true
+  config.hostmanager.manage_host        = true
+  config.hostmanager.ignore_private_ip  = false
+  config.hostmanager.include_offline    = true
+  config.vm.hostname                    = "vagrant-mage.dev"
+  config.hostmanager.aliases            = %w(vagrant-mage)
 
   # Synced folders
-  config.vm.synced_folder "htdocs", "/var/www/magento", :nfs => true
+  config.vm.synced_folder "htdocs", "/var/www/magento", nfs: true,
+                                    mount_options: ["nolock", "async"],
+                                    bsd__nfs_options: ["alldirs","async","nolock"]
 
   # Virtualbox customization
   config.vm.provider :virtualbox do |vb|
-    vb.customize ["modifyvm", :id, "--memory", "2048"]
-    vb.customize ["modifyvm", :id, "--cpus", "2"]
-    vb.customize ["modifyvm", :id, "--ioapic", "on"]
+    vb.customize ["modifyvm", :id, "--memory", "1024", "--cpus", "2", "--pae", "on", "--hwvirtex", "on", "--ioapic", "on"]
   end
+
+  # "Provision" with hostmanager
+  config.vm.provision :hostmanager
 
   # Puppet!
   config.vm.provision :puppet do |puppet|

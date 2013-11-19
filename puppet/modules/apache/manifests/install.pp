@@ -32,6 +32,14 @@ class apache::install ( $server_name, $document_root, $logs_dir ) {
         notify  => Class['apache::service'],
     }
 
+    # Disable 000-default vhost
+    exec { "Disable 000-default":
+        onlyif  => "test -f /etc/apache2/sites-enabled/000-default",
+        command => "a2dissite 000-default",
+        require => [ Package['apache2'] ],
+        notify  => Class['apache::service'],
+    }
+
     # Enable the virtualhost
     exec { "Enable the virtualhost":
         command => "a2ensite magento",
@@ -43,7 +51,6 @@ class apache::install ( $server_name, $document_root, $logs_dir ) {
     # Set the host in local loop
     host { "magento":
         ensure  => present,
-        ip      => "127.0.0.1",
         name    => $server_name,
     }
 
